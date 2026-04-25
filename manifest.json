@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "WhatsApp PDF Auto Download",
+  "description": "تنزيل ملفات PDF تلقائياً في واتساب ويب بدلاً من فتح العارض",
+  "version": "1.0",
+  "icons": {
+    "16": "icon.ico",
+    "48": "icon.ico",
+    "128": "icon.ico"
+  },
+  "permissions": [
+    "downloads"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://web.whatsapp.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
