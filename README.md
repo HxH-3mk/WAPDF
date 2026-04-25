@@ -1,4 +1,4 @@
-# WhatsApp Web Auto Downloader
+# WhatsApp Web PDF Viewer Bypass
 
 A Chrome extension that bypasses the built-in WhatsApp Web PDF viewer and forces direct downloads of PDF files (and other document types) directly to your computer.
 
