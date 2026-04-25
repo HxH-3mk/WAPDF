@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "WhatsApp PDF Auto Download",
-  "description": "تنزيل ملفات PDF تلقائياً في واتساب ويب بدلاً من فتح العارض",
+  "name": "WhatsApp Web PDF Viewer Bypass",
+  "description": "تجاوز عارض PDF في واتساب ويب وتنزيل الملفات مباشرة",
   "version": "1.0",
   "icons": {
     "16": "icon.ico",
