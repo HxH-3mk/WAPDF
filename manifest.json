@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "WhatsApp Web PDF Viewer Bypass",
   "description": "تجاوز عارض PDF في واتساب ويب وتنزيل الملفات مباشرة",
-  "version": "1.0",
+  "version": "1.1",
   "icons": {
     "16": "icon.ico",
     "48": "icon.ico",
