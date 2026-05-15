@@ -160,6 +160,13 @@
         for (const btn of buttons) {
             if (btn.dataset.hasCustomDl) continue;
 
+            // تجاهل الأزرار الموجودة داخل رسائل مقتبسة (ردود) أو داخل لوحة الرد، وكذلك القائمة الجانبية للمستندات
+            if (btn.closest('[data-testid="quoted-message"]') ||
+                btn.closest('[data-testid="popup_panel"]') ||
+                btn.closest('[data-testid="drawer-right"]')) {
+                continue;
+            }
+
             if (isFileButton(btn)) {
                 btn.dataset.hasCustomDl = 'true';
 
