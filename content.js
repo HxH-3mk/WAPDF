@@ -11,12 +11,54 @@
     const fileExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.zip', '.rar', '.apk', '.txt', '.csv'];
 
     function getLang() {
-        const htmlLang = document.documentElement.lang || navigator.language;
-        const isArabic = htmlLang.toLowerCase().startsWith('ar') || document.documentElement.dir === 'rtl';
-        return {
-            downloadDirect: isArabic ? "تنزيل مباشر" : "Direct Download",
-            downloaded: isArabic ? "تم التنزيل" : "Downloaded"
-        };
+        const storedText = localStorage.getItem('wa_pdf_dl_text');
+        const htmlLang = (document.documentElement.lang || navigator.language || '').toLowerCase();
+
+        let texts = {};
+        if (htmlLang.startsWith('ar') || document.documentElement.dir === 'rtl') {
+            texts = { downloadDirect: "تنزيل مباشر", downloaded: "تم التنزيل" };
+        } else if (htmlLang.startsWith('es')) {
+            texts = { downloadDirect: "Descarga directa", downloaded: "Descargado" };
+        } else if (htmlLang.startsWith('pt')) {
+            texts = { downloadDirect: "Baixar Direto", downloaded: "Baixado" };
+        } else if (htmlLang.startsWith('hi')) {
+            texts = { downloadDirect: "सीधा डाउनलोड", downloaded: "डाउनलोड हो गया" };
+        } else if (htmlLang.startsWith('fr')) {
+            texts = { downloadDirect: "Téléchargement direct", downloaded: "Téléchargé" };
+        } else if (htmlLang.startsWith('de')) {
+            texts = { downloadDirect: "Direkter Download", downloaded: "Heruntergeladen" };
+        } else if (htmlLang.startsWith('it')) {
+            texts = { downloadDirect: "Download diretto", downloaded: "Scaricato" };
+        } else if (htmlLang.startsWith('id')) {
+            texts = { downloadDirect: "Unduhan Langsung", downloaded: "Telah Diunduh" };
+        } else if (htmlLang.startsWith('ru')) {
+            texts = { downloadDirect: "Прямое скачивание", downloaded: "Скачано" };
+        } else if (htmlLang.startsWith('tr')) {
+            texts = { downloadDirect: "Doğrudan İndir", downloaded: "İndirildi" };
+        } else if (htmlLang.startsWith('nl')) {
+            texts = { downloadDirect: "Directe download", downloaded: "Gedownload" };
+        } else if (htmlLang.startsWith('pl')) {
+            texts = { downloadDirect: "Pobieranie bezpośrednie", downloaded: "Pobrano" };
+        } else if (htmlLang.startsWith('zh')) {
+            texts = { downloadDirect: "直接下载", downloaded: "已下载" };
+        } else if (htmlLang.startsWith('ja')) {
+            texts = { downloadDirect: "直接ダウンロード", downloaded: "ダウンロード済み" };
+        } else if (htmlLang.startsWith('ko')) {
+            texts = { downloadDirect: "직접 다운로드", downloaded: "다운로드 완료" };
+        } else if (htmlLang.startsWith('ms')) {
+            texts = { downloadDirect: "Muat Turun Terus", downloaded: "Telah Dimuat Turun" };
+        } else if (htmlLang.startsWith('vi')) {
+            texts = { downloadDirect: "Tải xuống trực tiếp", downloaded: "Đã tải xuống" };
+        } else {
+            texts = { downloadDirect: "Direct Download", downloaded: "Downloaded" };
+        }
+
+        if (storedText) {
+            texts.downloadDirect = storedText;
+            texts.downloaded = storedText + " ✓";
+        }
+
+        return texts;
     }
 
     // ---- الجزء الأول: التعرف على الملفات واعتراض النقر ----
@@ -37,11 +79,14 @@
         if (tag !== 'BUTTON' && role !== 'button') return false;
 
         const ariaLabel = (el.getAttribute('aria-label') || '').toLowerCase();
-        // استبعاد الأزرار العادية مثل التشغيل والإيقاف
-        if (ariaLabel.includes('play') || ariaLabel.includes('تشغيل') ||
-            ariaLabel.includes('pause') || ariaLabel.includes('إيقاف') ||
-            ariaLabel.includes('صورة') || ariaLabel.includes('image') ||
-            ariaLabel.includes('sticker') || ariaLabel.includes('ملصق')) return false;
+        // استبعاد الأزرار العادية بمختلف اللغات
+        const ignoredKeywords = [
+            'play', 'تشغيل', 'reproduzir', 'tocar', 'reproducir', 'चलाएं', 'lire', 'abspielen', 'riproduci', 'putar', 'воспроизвести', 'oynat', 'afspelen', 'odtwórz', '播放', '再生', '재생', 'mainkan', 'phát',
+            'pause', 'إيقاف', 'pausar', 'रोकें', 'anhalten', 'pausa', 'jeda', 'пауза', 'duraklat', 'pauze', 'wstrzymaj', '暂停', '暫停', '一時停止', '일시 정지', 'tạm dừng',
+            'image', 'صورة', 'imagem', 'foto', 'imagen', 'फ़ोटो', 'चित्र', 'bild', 'immagine', 'gambar', 'изображение', 'fotoğraf', 'resim', 'afbeelding', 'obraz', '图片', '照片', '画像', '사진', 'imej', 'hình ảnh',
+            'sticker', 'ملصق', 'figurinha', 'autocolante', 'pegatina', 'स्टिकर', 'autocollant', 'aufkleber', 'adesivo', 'stiker', 'стикер', 'çıkartma', 'naklejka', '贴纸', 'ステッカー', '스티커', 'pelekat', 'nhãn dán'
+        ];
+        if (ignoredKeywords.some(keyword => ariaLabel.includes(keyword))) return false;
 
         const text = (el.innerText || el.textContent || '').toLowerCase();
         return fileExtensions.some(ext => text.includes(ext)) || isPdfButton(el);
@@ -65,12 +110,14 @@
     // ---- الجزء الثاني: منطق التنزيل من القائمة السياقية (Context Menu) ----
 
     function downloadViaContextMenu(fileBtn) {
+        const contextArrowSelector = '[data-testid="icon-down-context"], [aria-label="Context menu"], [aria-label="قائمة السياق"], [aria-label="Menú contextual"], [aria-label="Opciones de mensaje"], [aria-label="Menu de contexto"], [aria-label="Opções da mensagem"], [aria-label="संदेश विकल्प"]';
+
         // البحث عن فقاعة الرسالة التي تحتوي على الملف
         let messageEl = fileBtn.closest('[data-id]') || fileBtn.closest('[role="row"]');
         if (!messageEl) {
             let current = fileBtn;
             while (current && current !== document.body) {
-                if (current.querySelector('[data-testid="icon-down-context"], [aria-label="Context menu"], [aria-label="قائمة السياق"]')) {
+                if (current.querySelector(contextArrowSelector)) {
                     messageEl = current;
                     break;
                 }
@@ -90,7 +137,7 @@
         messageEl.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true, cancelable: true }));
 
         setTimeout(() => {
-            let contextArrow = messageEl.querySelector('[data-testid="icon-down-context"], [aria-label="Context menu"], [aria-label="قائمة السياق"]');
+            let contextArrow = messageEl.querySelector(contextArrowSelector);
             if (contextArrow) {
                 // فتح القائمة
                 contextArrow.click();
@@ -107,9 +154,49 @@
                     // القائمة تفتح كعنصر منفصل [role="menu"]
                     const menus = document.querySelectorAll('[role="menu"]');
                     for (const menu of menus) {
-                        const dlBtn = menu.querySelector('button[aria-label="Download"], button[aria-label="تنزيل"], li[data-testid="mi-download"]');
+                        // 1. البحث باستخدام data-testid (المعيار الأساسي)
+                        let dlBtn = menu.querySelector('li[data-testid="mi-download"]');
+
+                        // 2. البحث باستخدام أيقونة التنزيل (تدعم جميع اللغات بفضل ic-download)
+                        if (!dlBtn) {
+                            const svgs = menu.querySelectorAll('svg');
+                            for (const svg of svgs) {
+                                const title = svg.querySelector('title');
+                                if (title && title.textContent === 'ic-download') {
+                                    // العثور على العنصر القابل للنقر (الأب)
+                                    dlBtn = svg.closest('li, [role="menuitem"], button, div[role="button"]') || svg.parentElement;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // 3. طريقة احتياطية أخيرة بالنصوص
+                        if (!dlBtn) {
+                            const fallbackSelector = 'button[aria-label="Download"], button[aria-label="تنزيل"], button[aria-label="Baixar"], button[aria-label="Descargar"], button[aria-label="डाउनलोड"], button[aria-label="डाउनलोड करें"], button[aria-label="Télécharger"], button[aria-label="Herunterladen"], button[aria-label="Scarica"], button[aria-label="Unduh"], button[aria-label="Скачать"], button[aria-label="İndir"], button[aria-label="Downloaden"], button[aria-label="Pobierz"], button[aria-label="下载"], button[aria-label="下載"], button[aria-label="ダウンロード"], button[aria-label="다운로드"], button[aria-label="Muat turun"], button[aria-label="Tải xuống"]';
+                            dlBtn = menu.querySelector(fallbackSelector);
+                        }
+
                         if (dlBtn) {
                             clearInterval(interval);
+
+                            // التعلم الذاتي للغة: استخراج نص زر التنزيل وحفظه
+                            try {
+                                let btnText = dlBtn.innerText || dlBtn.textContent || '';
+                                btnText = btnText.replace(/ic-download/gi, '').trim();
+                                if (btnText && btnText.length > 1 && btnText.length < 30) {
+                                    if (localStorage.getItem('wa_pdf_dl_text') !== btnText) {
+                                        localStorage.setItem('wa_pdf_dl_text', btnText);
+                                        // التحديث الفوري لجميع الأزرار في الصفحة
+                                        document.querySelectorAll('.custom-wa-dl-btn').forEach(btn => {
+                                            const span = btn.querySelector('span');
+                                            if (span) {
+                                                span.textContent = btn.dataset.downloaded === 'true' ? (btnText + ' ✓') : btnText;
+                                            }
+                                        });
+                                    }
+                                }
+                            } catch (e) { }
+
                             dlBtn.click();
                             return;
                         }
